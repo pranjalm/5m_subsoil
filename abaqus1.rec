@@ -1,0 +1,88 @@
+# -*- coding: mbcs -*-
+from part import *
+from material import *
+from section import *
+from assembly import *
+from step import *
+from interaction import *
+from load import *
+from mesh import *
+from optimization import *
+from job import *
+from sketch import *
+from visualization import *
+from connectorBehavior import *
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
+mdb.models['Model-1'].sketches['__profile__'].rectangle(point1=(0.0, 0.0), 
+    point2=(0.15, 0.15))
+mdb.models['Model-1'].Part(dimensionality=THREE_D, name='rail', type=
+    DEFORMABLE_BODY)
+mdb.models['Model-1'].parts['rail'].BaseSolidExtrude(depth=5.0, sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=200.0)
+mdb.models['Model-1'].sketches['__profile__'].CircleByCenterPerimeter(center=(
+    0.0, 0.0), point1=(0.0, 1.0))
+mdb.models['Model-1'].Part(dimensionality=THREE_D, name='wheel', type=
+    DEFORMABLE_BODY)
+mdb.models['Model-1'].parts['wheel'].BaseSolidExtrude(depth=0.15, sketch=
+    mdb.models['Model-1'].sketches['__profile__'])
+del mdb.models['Model-1'].sketches['__profile__']
+mdb.models['Model-1'].rootAssembly.DatumCsysByDefault(CARTESIAN)
+mdb.models['Model-1'].rootAssembly.Instance(dependent=ON, name='rail-1', part=
+    mdb.models['Model-1'].parts['rail'])
+mdb.models['Model-1'].rootAssembly.Instance(dependent=ON, name='wheel-1', part=
+    mdb.models['Model-1'].parts['wheel'])
+mdb.models['Model-1'].rootAssembly.instances['wheel-1'].translate(vector=(1.35, 
+    0.0, 0.0))
+mdb.models['Model-1'].Material(name='steel')
+mdb.models['Model-1'].materials['steel'].Density(table=((7850.0, ), ))
+mdb.models['Model-1'].materials['steel'].Elastic(table=((207000000000.0, 0.28), 
+    ))
+mdb.models['Model-1'].HomogeneousSolidSection(material='steel', name=
+    'wheel_section', thickness=None)
+mdb.models['Model-1'].parts['wheel'].Set(cells=
+    mdb.models['Model-1'].parts['wheel'].cells.getSequenceFromMask(('[#1 ]', ), 
+    ), name='wheel')
+mdb.models['Model-1'].parts['wheel'].SectionAssignment(offset=0.0, offsetField=
+    '', offsetType=MIDDLE_SURFACE, region=
+    mdb.models['Model-1'].parts['wheel'].sets['wheel'], sectionName=
+    'wheel_section', thicknessAssignment=FROM_SECTION)
+mdb.models['Model-1'].Material(name='concrete')
+mdb.models['Model-1'].materials['concrete'].Density(table=((2400.0, ), ))
+mdb.models['Model-1'].materials['concrete'].Elastic(table=((55000000000.0, 
+    0.2), ))
+mdb.models['Model-1'].HomogeneousSolidSection(material='concrete', name=
+    'rail_section', thickness=None)
+mdb.models['Model-1'].parts['rail'].Set(cells=
+    mdb.models['Model-1'].parts['rail'].cells.getSequenceFromMask(('[#1 ]', ), 
+    ), name='rail')
+mdb.models['Model-1'].parts['rail'].SectionAssignment(offset=0.0, offsetField=
+    '', offsetType=MIDDLE_SURFACE, region=
+    mdb.models['Model-1'].parts['rail'].sets['rail'], sectionName=
+    'rail_section', thicknessAssignment=FROM_SECTION)
+mdb.models['Model-1'].rootAssembly.regenerate()
+mdb.models['Model-1'].rootAssembly.ParallelFace(fixedPlane=
+    mdb.models['Model-1'].rootAssembly.instances['rail-1'].faces[0], flip=OFF, 
+    movablePlane=
+    mdb.models['Model-1'].rootAssembly.instances['wheel-1'].faces[1])
+mdb.models['Model-1'].rootAssembly.ParallelFace(fixedPlane=
+    mdb.models['Model-1'].rootAssembly.instances['rail-1'].faces[2], flip=OFF, 
+    movablePlane=
+    mdb.models['Model-1'].rootAssembly.instances['wheel-1'].faces[2])
+mdb.models['Model-1'].rootAssembly.translate(instanceList=('wheel-1', ), 
+    vector=(-1.35, 1.15, 4.85))
+mdb.models['Model-1'].rootAssembly.ReferencePoint(point=
+    mdb.models['Model-1'].rootAssembly.instances['wheel-1'].InterestingPoint(
+    mdb.models['Model-1'].rootAssembly.instances['wheel-1'].edges[1], CENTER))
+mdb.models['Model-1'].rootAssembly.Set(name='m_Set-1', referencePoints=(
+    mdb.models['Model-1'].rootAssembly.referencePoints[8], ))
+mdb.models['Model-1'].rootAssembly.Surface(name='s_Surf-1', side1Faces=
+    mdb.models['Model-1'].rootAssembly.instances['wheel-1'].faces.getSequenceFromMask(
+    ('[#4 ]', ), ))
+mdb.models['Model-1'].Coupling(controlPoint=
+    mdb.models['Model-1'].rootAssembly.sets['m_Set-1'], couplingType=KINEMATIC, 
+    influenceRadius=WHOLE_SURFACE, localCsys=None, name='wheel_rotation', 
+    surface=mdb.models['Model-1'].rootAssembly.surfaces['s_Surf-1'], u1=ON, u2=
+    ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
+mdb.models['Model-1'].StaticStep(name='loading', previous='Initial')
